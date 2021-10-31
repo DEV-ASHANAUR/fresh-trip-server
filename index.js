@@ -28,13 +28,15 @@ async function run() {
     const serviceCollection = database.collection('service');
     // create order collection
     const orderCollection = database.collection('order');
-    //getservice
+    //create message collection 
+    const messageCollection = database.collection('message');
+    //get service
     app.get('/service',async(req,res)=>{
         const cursor = serviceCollection.find({});
         const result = await cursor.toArray();
         res.json(result);
     });
-    //getservice by id
+    //get service by id
     app.get('/service/:id',async(req,res)=>{
         const id = req.params.id;
         // console.log('request id is:',id);
@@ -54,6 +56,12 @@ async function run() {
         const result = await orderCollection.insertOne(data);
         res.json(result);
     });
+    //get all order
+    app.get('/myorder',async(req,res)=>{
+        const cursor = orderCollection.find({});
+        const allorder = await cursor.toArray();
+        res.json(allorder);
+    });
     //get my order
     app.get('/myorder/:email',async(req,res)=>{
         const email = req.params.email;
@@ -62,11 +70,39 @@ async function run() {
         const myorder = await cursor.toArray();
         res.json(myorder);
     });
+    //update status
+    app.put('/order/:id',async(req,res)=>{
+        const id = req.params.id;
+        const itemData = req.body;
+        const filter = { _id:ObjectId(id) };
+        const options = { upsert: true };
+        const updateDoc = {
+          $set: {
+            name:itemData.name,
+            email:itemData.email,
+            phone:itemData.phone,
+            address:itemData.address,
+            service_id:itemData.service_id,
+            destination:itemData.destination,
+            duration:itemData.duration,
+            price:itemData.price,
+            status:itemData.status
+          },
+        };
+        const result = await orderCollection.updateOne(filter, updateDoc, options);
+        res.json(result);
+      })
     //delete order
-    app.delete('/myorder/:id',async(req,res)=>{
+    app.delete('/order/:id',async(req,res)=>{
         const id = req.params.id;
         const query = { _id: ObjectId(id) };
         const result = await orderCollection.deleteOne(query);
+        res.json(result);
+    });
+    //store message
+    app.post('/message',async(req,res)=>{
+        const data = req.body;
+        const result = await messageCollection.insertOne(data);
         res.json(result);
     });
     console.log("Connected successfully to server");
